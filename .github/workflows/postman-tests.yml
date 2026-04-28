@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - githubPages
+      - alluruReport
+
   pull_request:
     branches:
       - main
       - githubPages
+      - alluruReport
+      
   workflow_dispatch:
 
 permissions:
