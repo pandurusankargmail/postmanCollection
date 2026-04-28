@@ -53,6 +53,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: newman
     if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/githubPages')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Download test report artifact
@@ -64,13 +67,11 @@ jobs:
       - name: Rename report to index.html
         run: mv report/newman-report.html report/index.html
 
-      - name: List report directory
-        run: ls -la report/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: report
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: report
-          force_orphan: true
-          commit_message: "docs: update Newman test report [skip ci]"
+        id: deployment
+        uses: actions/deploy-pages@v4
