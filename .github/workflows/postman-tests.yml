@@ -39,7 +39,8 @@ jobs:
             --environment "Test Environment.postman_environment.json" \
             --reporters cli,htmlextra \
             --reporter-htmlextra-export results/newman-report.html \
-            --color on
+            --color on \
+            --k
 
       - name: Upload test report
         if: always()
