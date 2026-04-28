@@ -59,16 +59,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: newman-report
-          path: results
+          path: report
 
-      - name: Add index.html redirect
-        run: |
-          cp results/newman-report.html results/index.html
+      - name: Rename report to index.html
+        run: mv report/newman-report.html report/index.html
+
+      - name: List report directory
+        run: ls -la report/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: results
-          destination_dir: .
+          publish_dir: report
+          force_orphan: true
           commit_message: "docs: update Newman test report [skip ci]"
