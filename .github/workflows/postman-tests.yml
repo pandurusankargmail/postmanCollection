@@ -12,7 +12,7 @@ on:
       - main
       - githubPages
       - alluruReport
-      
+
   workflow_dispatch:
 
 permissions:
@@ -35,7 +35,7 @@ jobs:
           node-version: '20'
 
       - name: Install Newman and Allure tools
-        run: npm install -g newman newman-reporter-allure allure
+        run: npm install -g newman newman-reporter-allure allure allure-commandline
 
       - name: Run Postman collection
         run: |
