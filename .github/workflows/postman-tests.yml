@@ -50,6 +50,29 @@ jobs:
           echo "=== allure-results contents ==="
           ls -la allure-results/ || echo "allure-results directory not found"
 
+      - name: Set Allure Environment
+        if: always()
+        run: |
+          echo "Browser=Chrome" >> allure-results/environment.properties
+          echo "Environment=Staging" >> allure-results/environment.properties
+          echo "Runner=GitHub Actions" >> allure-results/environment.properties
+
+      - name: Set Allure Categories
+        if: always()
+        run: |
+          cat <<'EOF' > allure-results/categories.json
+          [
+            {
+              "name": "Passed Tests",
+              "matchedStatuses": ["passed"]
+            },
+            {
+              "name": "Failed Tests",
+              "matchedStatuses": ["failed"]
+            }
+          ]
+          EOF
+
       - name: Generate Allure report
         if: always()
         run: |
