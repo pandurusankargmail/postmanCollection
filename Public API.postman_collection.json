@@ -1,0 +1,191 @@
+{
+  "info": {
+    "_postman_id": "4209e167-0f14-4e62-abd1-1c200bce09eb",
+    "name": "Public API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51594746",
+    "_collection_link": "https://go.postman.co/collection/51594746-4209e167-0f14-4e62-abd1-1c200bce09eb?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Search Zip",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Parse the JSON response",
+              "const jsonData = pm.response.json();",
+              "",
+              "// Test: Status code is 200",
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// Test: 'results' exists and is non-empty",
+              "pm.test(\"'results' exists and is non-empty\", function () {",
+              "    pm.expect(jsonData).to.have.property('results');",
+              "    pm.expect(jsonData.results).to.be.an('array').that.is.not.empty;",
+              "});",
+              "",
+              "// Extract and save postcodes from the first result",
+              "if (jsonData.results && jsonData.results.length > 0) {",
+              "    const firstResult = jsonData.results[0];",
+              "    ",
+              "    // // Save the postcodes array as a JSON string",
+              "    // if (firstResult.postcodes) {",
+              "    //     pm.environment.set(\"search_postcodes\", JSON.stringify(firstResult.postcodes));",
+              "        ",
+              "        // Save the first postcode if present",
+              "        if (firstResult.postcodes.length > 0) {",
+              "            pm.environment.set(\"latitude\", firstResult.latitude);",
+              "            pm.environment.set(\"longitude\", firstResult.longitude);",
+              "            pm.environment.set(\"timezone\", firstResult.timezone);",
+              "        }",
+              "}",
+              "",
+              "",
+              "// Test: 'postcodes' was saved to environment",
+              "// pm.test(\"'postcodes' was saved to environment variable\", function () {",
+              "//     const savedPostcodes = pm.environment.get(\"search_postcodes\");",
+              "//     pm.expect(savedPostcodes).to.not.be.undefined;",
+              "//     pm.expect(savedPostcodes).to.be.a('string');",
+              "//     pm.expect(JSON.parse(savedPostcodes)).to.be.an('array');",
+              "// });"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://geocoding-api.open-meteo.com/v1/search?name={{ZipCode}}&count=10&language=en&format=json",
+          "protocol": "https",
+          "host": [
+            "geocoding-api",
+            "open-meteo",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "{{ZipCode}}"
+            },
+            {
+              "key": "count",
+              "value": "10"
+            },
+            {
+              "key": "language",
+              "value": "en"
+            },
+            {
+              "key": "format",
+              "value": "json"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Forecast",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://api.open-meteo.com/v1/forecast?latitude={{latitude}}&longitude={{longitude}}&daily=temperature_2m_max&daily=windspeed_10m_max&timezone={{timezone}}&daily=temperature_2m_min&temperature_unit=fahrenheit",
+          "protocol": "https",
+          "host": [
+            "api",
+            "open-meteo",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "forecast"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{latitude}}"
+            },
+            {
+              "key": "longitude",
+              "value": "{{longitude}}"
+            },
+            {
+              "key": "daily",
+              "value": "temperature_2m_max"
+            },
+            {
+              "key": "daily",
+              "value": "windspeed_10m_max"
+            },
+            {
+              "key": "timezone",
+              "value": "{{timezone}}"
+            },
+            {
+              "key": "daily",
+              "value": "temperature_2m_min"
+            },
+            {
+              "key": "temperature_unit",
+              "value": "fahrenheit"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Free API",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://api.freeapi.app/api/v1/public/meals?page=1&limit=10&qurey=rice",
+          "protocol": "https",
+          "host": [
+            "api",
+            "freeapi",
+            "app"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "public",
+            "meals"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1",
+              "type": "text"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "type": "text"
+            },
+            {
+              "key": "qurey",
+              "value": "rice",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
