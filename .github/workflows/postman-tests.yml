@@ -68,6 +68,7 @@ jobs:
         with:
           name: allure-report
           path: allure-report
+          retention-days: 30
 
   publish-report:
     name: Publish Report to GitHub Pages
@@ -83,12 +84,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-report
-          path: allure-report
+          path: ./
+
+      - name: Verify report contents
+        run: |
+          echo "=== Current directory contents ==="
+          ls -la
+          echo "=== Checking for index.html ==="
+          test -f index.html && echo "✓ index.html found" || echo "✗ index.html NOT found"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: allure-report
+          path: ./
 
       - name: Deploy to GitHub Pages
         id: deployment
