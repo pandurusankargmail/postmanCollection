@@ -35,7 +35,7 @@ jobs:
           node-version: '20'
 
       - name: Install Newman and Allure tools
-        run: npm install -g newman newman-reporter-allure allure allure-commandline
+        run: npm install -g newman newman-reporter-allure allure-commandline
 
       - name: Run Postman collection
         run: |
@@ -44,9 +44,23 @@ jobs:
             --reporters cli,allure \
             --color on
 
+      - name: Debug - list allure-results
+        if: always()
+        run: |
+          echo "=== allure-results contents ==="
+          ls -la allure-results/ || echo "allure-results directory not found"
+
       - name: Generate Allure report
         if: always()
-        run: allure generate allure-results -o allure-report
+        run: allure generate allure-results --clean -o allure-report
+
+      - name: Debug - list allure-report
+        if: always()
+        run: |
+          echo "=== allure-report root ==="
+          ls -la allure-report/
+          echo "=== checking index.html ==="
+          test -f allure-report/index.html && echo "index.html EXISTS" || echo "index.html MISSING"
 
       - name: Upload Allure report
         if: always()
