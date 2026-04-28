@@ -59,7 +59,7 @@ jobs:
     name: Publish Report to GitHub Pages
     runs-on: ubuntu-latest
     needs: newman
-    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/githubPages')
+    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/githubPages' || github.ref == 'refs/heads/alluruReport')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
