@@ -1,3 +1,12 @@
+# this workflow runs Postman tests using Newman and publishes the HTML report to GitHub Pages
+# It triggers on pushes and pull requests to the main and githubPages branches, as well as manual workflow dispatches.
+# The workflow consists of two jobs:
+# 1. newman: This job checks out the code, sets up Node.js, installs Newman, runs the Postman collection, and uploads the HTML report as an artifact.
+# 2. publish-report: This job runs after the newman job, downloads the test report artifact, renames it to index.html, uploads it as a Pages artifact, and deploys it to GitHub Pages. It only runs on pushes to the main and githubPages branches.
+
+# Update on 2026-04-30
+
+
 name: Run Postman Collection
 
 on:
