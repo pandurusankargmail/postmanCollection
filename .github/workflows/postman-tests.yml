@@ -73,16 +73,21 @@ jobs:
           name: allure-results
           path: allure-results
 
-      - name: Checkout gh-pages branch (for history)
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: allure-history
-
-      - name: Ensure history directory exists
-        run: mkdir -p allure-history
+      - name: Prepare Allure history (if gh-pages exists)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p allure-history
+          if git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" gh-pages > /dev/null 2>&1; then
+            echo "gh-pages branch found. Bootstrapping history..."
+            git clone --depth 1 --branch gh-pages "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages-temp
+            if [ -d gh-pages-temp/last-history ]; then
+              mkdir -p allure-history/last-history
+              cp -R gh-pages-temp/last-history/. allure-history/last-history/
+            fi
+          else
+            echo "gh-pages branch not found. First publish will create it."
+          fi
 
       - name: Build consolidated Allure report with history
         uses: simple-elf/allure-report-action@v1.13
