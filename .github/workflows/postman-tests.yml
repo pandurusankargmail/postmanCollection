@@ -13,11 +13,14 @@ on:
       - alluruReport
   workflow_dispatch:
 
+# Required for GitHub Pages deployment via Actions
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Job 1 of 3 — Run Newman tests and export raw Allure result files
+# Job 1 of 3 — Run Newman tests, export raw Allure result files
 # ──────────────────────────────────────────────────────────────────────────────
 jobs:
   run-tests:
@@ -67,7 +70,9 @@ jobs:
           retention-days: 7
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Job 2 of 3 — Install allure CLI, restore history, generate HTML report
+# Job 2 of 3 — Generate self-contained single-file Allure HTML report
+#   --single-file embeds all data inside index.html so GitHub Pages
+#   never has to fetch() external JSON files (which causes blank pages)
 # ──────────────────────────────────────────────────────────────────────────────
   build-report:
     name: Build Allure Report
@@ -91,35 +96,22 @@ jobs:
       - name: Install allure-commandline
         run: npm install -g allure-commandline
 
-      - name: Restore Allure history from gh-pages
+      - name: Generate single-file Allure HTML report
         run: |
-          mkdir -p allure-results/history
-          if git ls-remote --exit-code --heads \
-              "https://github.com/${{ github.repository }}.git" gh-pages 2>/dev/null; then
-            echo "gh-pages exists — cloning history..."
-            git clone --depth 1 --branch gh-pages \
-              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
-              gh-pages-clone
-            if [ -d gh-pages-clone/history ]; then
-              cp -R gh-pages-clone/history/. allure-results/history/
-              echo "History restored successfully."
-            else
-              echo "No history folder found on gh-pages yet."
-            fi
-          else
-            echo "gh-pages branch not found — starting fresh."
-          fi
-
-      - name: Generate Allure HTML report
-        run: allure generate allure-results --clean -o allure-report
-
-      - name: Verify index.html was generated
-        run: |
+          allure generate allure-results --clean --single-file -o allure-report
           echo "=== allure-report files ==="
-          find allure-report -type f | sort | head -40
+          find allure-report -type f | sort
+
+      - name: Verify index.html was generated and has content
+        run: |
           test -f allure-report/index.html \
-            && echo "index.html OK" \
+            && echo "✓ index.html exists" \
             || { echo "ERROR: index.html missing"; exit 1; }
+          SIZE=$(wc -c < allure-report/index.html)
+          echo "index.html size: $SIZE bytes"
+          [ "$SIZE" -gt 50000 ] \
+            && echo "✓ index.html has substantial content" \
+            || echo "WARNING: index.html looks small ($SIZE bytes) — report may be empty"
 
       - name: Upload allure-report artifact
         if: always()
@@ -130,7 +122,9 @@ jobs:
           retention-days: 30
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Job 3 of 3 — Deploy the generated report to GitHub Pages (gh-pages branch)
+# Job 3 of 3 — Publish to GitHub Pages via Actions deployment
+#   No separate gh-pages branch — uses the official Actions Pages flow
+#   Repo Pages setting must be: Source = GitHub Actions
 # ──────────────────────────────────────────────────────────────────────────────
   publish-pages:
     name: Publish to GitHub Pages
@@ -144,6 +138,9 @@ jobs:
         github.ref == 'refs/heads/githubPages' ||
         github.ref == 'refs/heads/alluruReport'
       )
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Download allure-report artifact
@@ -152,17 +149,21 @@ jobs:
           name: allure-report
           path: allure-report
 
-      - name: Confirm index.html is present before deploy
+      - name: Confirm index.html before deploy
         run: |
           ls -la allure-report/
           test -f allure-report/index.html \
-            && echo "index.html confirmed — proceeding with deploy" \
-            || { echo "ERROR: index.html missing — aborting deploy"; exit 1; }
+            && echo "✓ index.html confirmed — deploying" \
+            || { echo "ERROR: index.html missing — aborting"; exit 1; }
 
-      - name: Deploy to GitHub Pages (gh-pages branch)
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: allure-report
-          publish_branch: gh-pages
-          keep_files: false
+          path: allure-report
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
