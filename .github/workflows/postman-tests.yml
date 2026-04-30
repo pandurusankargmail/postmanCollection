@@ -39,9 +39,11 @@ jobs:
 
       - name: Run Postman collection
         run: |
+          mkdir -p allure-results
           newman run "Public API.postman_collection.json" \
             --environment "Test Environment.postman_environment.json" \
             --reporters cli,allure \
+            --reporter-allure-export allure-results \
             --color on
 
       - name: Debug - list allure-results
@@ -116,6 +118,15 @@ jobs:
           name: allure-report
           path: pages-site
 
+      - name: Normalize artifact structure for Pages
+        run: |
+          if [ -d pages-site/allure-report ] && [ ! -f pages-site/index.html ]; then
+            echo "Found nested allure-report folder. Promoting files to pages-site root..."
+            shopt -s dotglob
+            mv pages-site/allure-report/* pages-site/
+            rmdir pages-site/allure-report || true
+          fi
+
       - name: Verify report contents
         run: |
           echo "=== Current directory contents ==="
@@ -123,12 +134,15 @@ jobs:
           echo "=== Pages site contents ==="
           ls -la pages-site
           echo "=== Checking for index.html ==="
-          test -f pages-site/index.html && echo "✓ index.html found" || echo "✗ index.html NOT found"
+          test -f pages-site/index.html && echo "✓ index.html found" || (echo "✗ index.html NOT found"; exit 1)
           echo "=== Checking single-file Allure markers ==="
           grep -q "allure" pages-site/index.html && echo "✓ embedded Allure content found" || echo "✗ embedded Allure content missing"
 
       - name: Create .nojekyll file
         run: touch pages-site/.nojekyll
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
